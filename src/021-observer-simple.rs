@@ -1,30 +1,30 @@
-trait Observer {
-    fn update(&self);
+struct FileSubject<'a> {
+    observers: Vec<&'a ObserverProcess>,
 }
 
-struct FileSubject<'a, T: Observer> {
-    observers: Vec<&'a T>,
-}
-
-impl<'a, T: Observer + PartialEq> FileSubject<'a, T> {
-    fn new() -> FileSubject<'a, T> {
+impl<'a> FileSubject<'a> {
+    fn new() -> FileSubject<'a> {
         FileSubject {
             observers: Vec::new(),
         }
     }
 
-    fn attach_observer(&mut self, observer: &'a T) {
+    fn attach_observer(&mut self, observer: &'a ObserverProcess) {
+        println!("attaching observer with id: {}", observer.id);
         self.observers.push(observer);
     }
 
     fn notify_observers(&self) {
         println!("Notifying observers...");
         for observer in self.observers.iter() {
-            observer.update();
+            println!(
+                "ObserverProcess with id: {} and name: {} has been updated",
+                observer.id, observer.name
+            );
         }
     }
 
-    fn detach_observer(&mut self, observer: &'a T) {
+    fn detach_observer(&mut self, observer: &'a ObserverProcess) {
         if let Some(index) = self.observers.iter().position(|x| *x == observer) {
             self.observers.remove(index);
             println!("observer with id: {} has been detached", index);
@@ -38,15 +38,6 @@ struct ObserverProcess {
     name: String,
 }
 
-impl Observer for ObserverProcess {
-    fn update(&self) {
-        println!(
-            "ObserverProcess with id: {} and name: {} has been updated",
-            self.id, self.name
-        );
-    }
-}
-
 fn main() {
     let mut file_subject = FileSubject::new();
 
@@ -55,13 +46,7 @@ fn main() {
         name: "Antivirus".to_string(),
     };
 
-    let couldfs_observer = ObserverProcess {
-        id: 2,
-        name: "CouldFS".to_string(),
-    };
-
     file_subject.attach_observer(&antivirus_observer);
-    file_subject.attach_observer(&couldfs_observer);
 
     file_subject.notify_observers();
 
